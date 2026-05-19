@@ -82,15 +82,15 @@ public class ProdutoForm extends JFrame {
         painelCampos.add(cbCategoria);
 
         JButton btnSalvar = new JButton("Salvar");
+        JButton btnAtualizarProduto = new JButton("Atualizar Produto");
         JButton btnExcluir = new JButton("Excluir");
         JButton btnLimpar = new JButton("Limpar");
-        JButton btnAtualizarCategorias = new JButton("Atualizar Categorias");
 
         JPanel painelBotoes = new JPanel();
         painelBotoes.add(btnSalvar);
+        painelBotoes.add(btnAtualizarProduto);
         painelBotoes.add(btnExcluir);
         painelBotoes.add(btnLimpar);
-        painelBotoes.add(btnAtualizarCategorias);
 
         tabela = new JTable();
 
@@ -102,15 +102,9 @@ public class ProdutoForm extends JFrame {
         add(new JScrollPane(tabela), BorderLayout.CENTER);
 
         btnSalvar.addActionListener(e -> salvar());
+        btnAtualizarProduto.addActionListener(e -> atualizarProduto());
         btnExcluir.addActionListener(e -> excluir());
         btnLimpar.addActionListener(e -> limparCampos());
-        btnAtualizarCategorias.addActionListener(e -> {
-            carregarCategorias();
-
-            if (categoriaIdInicial != null) {
-                selecionarCategoriaPorId(categoriaIdInicial);
-            }
-        });
 
         tabela.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -171,6 +165,65 @@ public class ProdutoForm extends JFrame {
         }
     }
 
+    private void atualizarProduto() {
+    try {
+        if (txtId.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto na tabela para atualizar.");
+            return;
+        }
+
+        int id = Integer.parseInt(txtId.getText().trim());
+
+        String nome = txtNome.getText().trim();
+        String precoTexto = txtPreco.getText().trim().replace(",", ".");
+        String quantidadeTexto = txtQuantidade.getText().trim();
+
+        if (nome.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Informe o nome do produto.");
+            return;
+        }
+
+        if (precoTexto.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Informe o preço do produto.");
+            return;
+        }
+
+        if (quantidadeTexto.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Informe a quantidade do produto.");
+            return;
+        }
+
+        if (cbCategoria.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Selecione uma categoria.");
+            return;
+        }
+
+        double preco = Double.parseDouble(precoTexto);
+        int quantidade = Integer.parseInt(quantidadeTexto);
+
+        Categoria categoriaSelecionada = (Categoria) cbCategoria.getSelectedItem();
+
+        Produto produto = new Produto();
+        produto.setId(id);
+        produto.setNome(nome);
+        produto.setPreco(preco);
+        produto.setQuantidade(quantidade);
+        produto.setCategoriaId(categoriaSelecionada.getId());
+
+        produtoDAO.editar(produto);
+
+        JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso.");
+
+        limparCampos();
+        carregarTabela();
+
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "Preço, quantidade ou ID inválido.");
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Erro ao atualizar produto: " + ex.getMessage());
+    }
+    }
+    
     private void excluir() {
         try {
             if (txtId.getText().trim().isEmpty()) {
