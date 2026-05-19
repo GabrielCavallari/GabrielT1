@@ -1,5 +1,3 @@
-Copie tudo abaixo e cole em um arquivo chamado **README.md** na pasta raiz do projeto:
-
 ````markdown
 # GabrielT1
 
