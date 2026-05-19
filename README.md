@@ -1,4 +1,3 @@
-````markdown
 # GabrielT1
 
 Projeto desenvolvido para o Trabalho T1 da faculdade.
