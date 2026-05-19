@@ -231,10 +231,23 @@ public class CategoriaForm extends JFrame {
         txtDescricao.setText("");
         tabela.clearSelection();
     }
-
+    
     private void abrirProdutos() {
-        ProdutoForm produtoForm = new ProdutoForm();
+    try {
+        if (txtId.getText().trim().isEmpty()) {
+            ProdutoForm produtoForm = new ProdutoForm();
+            produtoForm.setVisible(true);
+            return;
+        }
+
+        int categoriaId = Integer.parseInt(txtId.getText().trim());
+
+        ProdutoForm produtoForm = new ProdutoForm(categoriaId);
         produtoForm.setVisible(true);
+
+        } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "ID da categoria inválido.");
+        }
     }
 
     public static void main(String[] args) {

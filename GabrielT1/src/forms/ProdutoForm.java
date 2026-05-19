@@ -31,14 +31,27 @@ public class ProdutoForm extends JFrame {
     private final ProdutoDAO produtoDAO = new ProdutoDAO();
     private final CategoriaDAO categoriaDAO = new CategoriaDAO();
 
+    private Integer categoriaIdInicial;
+
     public ProdutoForm() {
+        this(null);
+    }
+
+    public ProdutoForm(Integer categoriaIdInicial) {
+        this.categoriaIdInicial = categoriaIdInicial;
+
         setTitle("Cadastro de Produtos");
-        setSize(900, 500);
+        setSize(950, 500);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         montarTela();
         carregarCategorias();
+
+        if (categoriaIdInicial != null) {
+            selecionarCategoriaPorId(categoriaIdInicial);
+        }
+
         carregarTabela();
     }
 
@@ -69,11 +82,13 @@ public class ProdutoForm extends JFrame {
         painelCampos.add(cbCategoria);
 
         JButton btnSalvar = new JButton("Salvar");
+        JButton btnExcluir = new JButton("Excluir");
         JButton btnLimpar = new JButton("Limpar");
         JButton btnAtualizarCategorias = new JButton("Atualizar Categorias");
 
         JPanel painelBotoes = new JPanel();
         painelBotoes.add(btnSalvar);
+        painelBotoes.add(btnExcluir);
         painelBotoes.add(btnLimpar);
         painelBotoes.add(btnAtualizarCategorias);
 
@@ -87,8 +102,21 @@ public class ProdutoForm extends JFrame {
         add(new JScrollPane(tabela), BorderLayout.CENTER);
 
         btnSalvar.addActionListener(e -> salvar());
+        btnExcluir.addActionListener(e -> excluir());
         btnLimpar.addActionListener(e -> limparCampos());
-        btnAtualizarCategorias.addActionListener(e -> carregarCategorias());
+        btnAtualizarCategorias.addActionListener(e -> {
+            carregarCategorias();
+
+            if (categoriaIdInicial != null) {
+                selecionarCategoriaPorId(categoriaIdInicial);
+            }
+        });
+
+        tabela.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                preencherCamposPelaTabela();
+            }
+        });
     }
 
     private void salvar() {
@@ -143,6 +171,38 @@ public class ProdutoForm extends JFrame {
         }
     }
 
+    private void excluir() {
+        try {
+            if (txtId.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Selecione um produto na tabela para excluir.");
+                return;
+            }
+
+            int id = Integer.parseInt(txtId.getText().trim());
+
+            int resposta = JOptionPane.showConfirmDialog(
+                    this,
+                    "Deseja realmente excluir este produto?",
+                    "Confirmação",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (resposta == JOptionPane.YES_OPTION) {
+                produtoDAO.excluir(id);
+
+                JOptionPane.showMessageDialog(this, "Produto excluído com sucesso.");
+
+                limparCampos();
+                carregarTabela();
+            }
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "ID do produto inválido.");
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao excluir produto: " + ex.getMessage());
+        }
+    }
+
     private void carregarCategorias() {
         try {
             cbCategoria.removeAllItems();
@@ -167,6 +227,7 @@ public class ProdutoForm extends JFrame {
             modelo.addColumn("Nome");
             modelo.addColumn("Preço");
             modelo.addColumn("Quantidade");
+            modelo.addColumn("Categoria ID");
             modelo.addColumn("Categoria");
 
             for (Produto produto : produtos) {
@@ -175,6 +236,7 @@ public class ProdutoForm extends JFrame {
                     produto.getNome(),
                     produto.getPreco(),
                     produto.getQuantidade(),
+                    produto.getCategoriaId(),
                     produto.getCategoriaNome()
                 });
             }
@@ -186,14 +248,43 @@ public class ProdutoForm extends JFrame {
         }
     }
 
+    private void preencherCamposPelaTabela() {
+        int linha = tabela.getSelectedRow();
+
+        if (linha >= 0) {
+            txtId.setText(tabela.getValueAt(linha, 0).toString());
+            txtNome.setText(tabela.getValueAt(linha, 1).toString());
+            txtPreco.setText(tabela.getValueAt(linha, 2).toString());
+            txtQuantidade.setText(tabela.getValueAt(linha, 3).toString());
+
+            int categoriaId = Integer.parseInt(tabela.getValueAt(linha, 4).toString());
+            selecionarCategoriaPorId(categoriaId);
+        }
+    }
+
+    private void selecionarCategoriaPorId(int categoriaId) {
+        for (int i = 0; i < cbCategoria.getItemCount(); i++) {
+            Categoria categoria = cbCategoria.getItemAt(i);
+
+            if (categoria.getId() == categoriaId) {
+                cbCategoria.setSelectedIndex(i);
+                return;
+            }
+        }
+    }
+
     private void limparCampos() {
         txtId.setText("");
         txtNome.setText("");
         txtPreco.setText("");
         txtQuantidade.setText("");
 
-        if (cbCategoria.getItemCount() > 0) {
+        if (categoriaIdInicial != null) {
+            selecionarCategoriaPorId(categoriaIdInicial);
+        } else if (cbCategoria.getItemCount() > 0) {
             cbCategoria.setSelectedIndex(0);
         }
+
+        tabela.clearSelection();
     }
 }
