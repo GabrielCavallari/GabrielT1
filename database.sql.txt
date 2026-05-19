@@ -1,0 +1,29 @@
+CREATE DATABASE faculdade_t1
+DEFAULT CHARACTER SET utf8mb4
+DEFAULT COLLATE utf8mb4_unicode_ci;
+
+USE faculdade_t1;
+
+CREATE TABLE categoria (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(80) NOT NULL,
+    descricao VARCHAR(200)
+);
+
+CREATE TABLE produto (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    preco DECIMAL(10,2) NOT NULL,
+    quantidade INT NOT NULL,
+    categoria_id INT NOT NULL,
+
+    CONSTRAINT fk_produto_categoria
+        FOREIGN KEY (categoria_id)
+        REFERENCES categoria(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+INSERT INTO categoria (nome, descricao) VALUES
+('Eletrônicos', 'Produtos eletrônicos em geral'),
+('Papelaria', 'Materiais escolares e de escritório');
